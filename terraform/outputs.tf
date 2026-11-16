@@ -1,4 +1,16 @@
-# Step 2.7. The filegateway Function URL output is added with the function in Phase 5.
+# Step 2.7 / 5.3. The dev proxy reads filegateway_url (`terraform output -raw filegateway_url`).
+
+output "filegateway_url" {
+  value = aws_lambda_function_url.filegateway.function_url
+}
+
+output "filegateway_function" {
+  value = aws_lambda_function.filegateway.function_name
+}
+
+output "filescan_function" {
+  value = aws_lambda_function.filescan.function_name
+}
 
 output "upload_bucket" {
   value = aws_s3_bucket.upload.bucket

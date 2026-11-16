@@ -25,6 +25,9 @@
         <!-- Python interpreter from the project virtualenv (see requirements-dev.txt). OS-specific path set in profiles below. -->
         <venv.python>${repo.root}/.venv/bin/python</venv.python>
         <terraform.executable>terraform</terraform.executable>
+        <!-- Reproducible archives: fixed entry timestamps make lambda zips byte-identical when the
+             code is unchanged, so Terraform's source_code_hash only redeploys real changes. -->
+        <project.build.outputTimestamp>2026-01-01T00:00:00Z</project.build.outputTimestamp>
 
         <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
         <exec-maven-plugin.version>3.5.0</exec-maven-plugin.version>

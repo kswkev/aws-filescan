@@ -56,7 +56,34 @@ Outputs:
 ## Deploy to the emulator
 
 ```powershell
-mvn -Pdeploy install      # build, test, then terraform init + apply
+.\scripts\deploy.ps1              # load emulator env, test, build, terraform apply, print outputs
+.\scripts\deploy.ps1 -SkipTests   # same without pytest
+```
+
+`deploy.ps1` is a wrapper around `mvn -Pdeploy install`, which you can also run directly after loading the env. Lambda zips are reproducible, so a deploy only updates a function when its code changed.
+
+What gets deployed:
+
+| Resource | Name |
+|---|---|
+| S3 buckets | `upload`, `clean`, `quarantine` |
+| SQS | `upload-events` (+ `upload-events-dlq`), fed by `upload` ObjectCreated events |
+| DynamoDB | `file-scan-results` (+ `status-index` GSI) |
+| Lambda | `filescan` (triggered by `upload-events`), `filegateway` (Function URL) |
+
+The API base URL is printed as `filegateway_url`. To try it:
+
+```powershell
+$url = terraform -chdir=terraform output -raw filegateway_url
+curl.exe --cacert .emulator\ca.pem -X POST -H "Content-Type: application/json" `
+  --data '{\"fileName\":\"a.txt\",\"contentType\":\"text/plain\"}' "${url}uploads"
+```
+
+## Tear down
+
+```powershell
+. .\scripts\emulator-env.ps1
+terraform -chdir=terraform destroy
 ```
 
 ## Rules for Lambda code

@@ -264,7 +264,28 @@ Completed 2026-11-16.
 
 ---
 
-## Phase 5 – Terraform: deploy lambdas
+## Phase 5 – Terraform: deploy lambdas ✅
+
+Completed 2026-11-16. `terraform/lambda.tf` deploys:
+- both functions (python3.12, 30 s, 128 MB) with Terraform-managed log groups (7-day retention);
+- the SQS→filescan mapping (batch size 10, `ReportBatchItemFailures`);
+- the filegateway Function URL (`authorization_type = NONE`).
+
+The Function URL is the `filegateway_url` output, e.g. `https://127.0.0.1:9297/_aws/lambda-url/<id>/`.
+
+Verified against the deployed stack:
+- both functions answer direct invokes;
+- an `aws s3 cp` upload is scanned, moved and recorded within seconds;
+- the full HTTP flow works: `POST /uploads` via the Function URL → `PUT` to the pre-signed URL (proxy-style `Host` header) → `GET /files/{id}` goes `PENDING → QUARANTINE` → the file appears in exactly one list → its download returns the original content;
+- no `ERROR` lines in the filescan logs;
+- all test data cleaned up afterwards.
+
+Implementation notes:
+- The Function URL has **both** `lambda:InvokeFunctionUrl` and `lambda:InvokeFunction` (`invoked_via_function_url = true`) permissions, as required by current AWS rules.
+- New variables: `public_s3_base` (default `/s3`; set to `""` on real AWS) and `url_expiry_seconds` (default 300).
+- **Reproducible zips:** the root POM sets `project.build.outputTimestamp`. Without it every build changed the zip hash, and every deploy redeployed both functions even when nothing had changed.
+- **One command:** `.\scripts\deploy.ps1 [-SkipTests]` loads the emulator env, then runs `mvn -Pdeploy install` and prints the outputs.
+- Don't pipe `deploy.ps1`/`mvn` into `Select-Object -First N`: stopping the pipeline early can kill Terraform partway through an apply.
 
 ### 5.1 Lambda functions
 - `aws_lambda_function` for `filegateway` (`filegateway.handler.handler`) and `filescan` (`filescan.handler.handler`):
