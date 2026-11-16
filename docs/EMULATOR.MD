@@ -34,6 +34,14 @@ The emulator already contained three buckets, all created 2026-11-16 13:24 and n
 | Lambda Function URL | ✅ | `https://127.0.0.1:9297/_aws/lambda-url/<id>/`. Needs a `lambda:InvokeFunctionUrl` permission, otherwise 403 |
 | API Gateway v2 (HTTP API, Lambda proxy) | ✅ | Call `https://127.0.0.1:9297/_aws/execute-api/<apiId>/<path>`; the returned `ApiEndpoint` hostname doesn't resolve locally |
 
+## Terraform (AWS provider v6.73) quirks
+
+| Quirk | Handling |
+|---|---|
+| DynamoDB tables report `on_demand_throughput {-1, -1}` | `lifecycle { ignore_changes = [on_demand_throughput] }`, otherwise every plan shows a change |
+| Creating `aws_sqs_queue` / `aws_sqs_queue_policy` takes ~25 s each | None needed; the provider waits for attributes to settle |
+| Queue URLs come back as `https://sqs.us-east-1.amazonaws.com/000000000000/<name>` | Works with the CLI and SDKs when the endpoint override is set |
+
 ## Inside a running Python function
 
 Functions do **not** run in a normal Lambda container:

@@ -114,7 +114,22 @@ Completed 2026-11-16:
 
 ---
 
-## Phase 2 – Terraform: core AWS resources
+## Phase 2 – Terraform: core AWS resources ✅
+
+Completed 2026-11-16. `terraform apply` created 12 resources, and a re-plan shows no changes. Files: `locals.tf`, `s3.tf`, `sqs.tf`, `dynamodb.tf`, `iam.tf`, `outputs.tf`. Verified against the emulator:
+- exactly the buckets `upload`, `clean` and `quarantine`;
+- queue redrive to the DLQ (`maxReceiveCount` 3) and a queue policy limited to the `upload` bucket;
+- the table key and the `status-index` GSI;
+- both roles, each with its inline policy;
+- a live upload producing `TestEvent` + `ObjectCreated:Put` on `upload-events`;
+- `mvn -Pdeploy install` running init + apply with no changes.
+
+Implementation notes:
+- The GSI uses `key_schema` blocks; `hash_key`/`range_key` inside the GSI are deprecated in provider v6.
+- The table ignores `on_demand_throughput`. The emulator reports `-1/-1`, which would otherwise show as a change on every plan.
+- Each SQS resource takes ~25 s to create (the provider waits for attributes to settle). This is expected.
+- `upload-events` has `visibility_timeout_seconds = 60`, which must stay ≥ the filescan timeout.
+- `filescan-role` also gets `dynamodb:GetItem`, for the duplicate-delivery check in step 4.5.
 
 ### 2.1 Provider configured for the emulator
 - `aws` provider with `region = "us-east-1"`, `endpoints { s3, sqs, lambda, dynamodb, iam, sts, logs }` set to `https://127.0.0.1:9297`, and `s3_use_path_style = true`.
