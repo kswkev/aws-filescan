@@ -1,0 +1,16 @@
+# Build output
+target/
+node_modules/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl.bak
+
+# Emulator per-run keys, CA and config (never commit)
+.emulator/
+
+# IDE
+.idea/
+*.iml
