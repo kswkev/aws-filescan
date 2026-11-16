@@ -16,9 +16,19 @@ A web UI for uploading files to S3. A Lambda function then simulates a virus sca
 | `lambda/filescan` | Python Lambda: SQS consumer that "scans" and moves uploaded files |
 | `web` | Static UI (`src/main/web`) and the local dev proxy (`src/main/python/devproxy.py`) |
 | `terraform` | All AWS resources, targeting the emulator |
-| `scripts/emulator-env.ps1` | Connects a PowerShell session to the emulator |
-| `scripts/deploy.ps1` | Test, build and deploy everything to the emulator |
-| `scripts/start-web.ps1` | Build the UI and start the dev proxy on port 8080 |
+| `scripts/emulator-env.{ps1,bat,sh}` | Connects the current shell to the emulator |
+| `scripts/deploy.{ps1,bat,sh}` | Test, build and deploy everything to the emulator |
+| `scripts/start-web.{ps1,bat,sh}` | Build the UI and start the dev proxy on port 8080 |
+
+Each script comes in three flavours: `.ps1` for PowerShell, `.bat` for `cmd.exe`, and `.sh` for bash/zsh (Linux, macOS, WSL, Git Bash). They behave the same:
+
+| | PowerShell | cmd | bash / zsh |
+|---|---|---|---|
+| Load emulator env | `. .\scripts\emulator-env.ps1` | `call scripts\emulator-env.bat` | `source scripts/emulator-env.sh` |
+| Deploy | `.\scripts\deploy.ps1 [-SkipTests]` | `scripts\deploy.bat [--skip-tests]` | `scripts/deploy.sh [--skip-tests]` |
+| Start the UI | `.\scripts\start-web.ps1 [-Port N]` | `scripts\start-web.bat [--port N]` | `scripts/start-web.sh [--port N]` |
+
+The env script must run *in* your shell (dot-sourced, `call`ed or `source`d) so the variables stick. `deploy` and `start-web` load it themselves. Use `--port 0` (or `-Port 0`) to let the OS pick any free port.
 
 ## Prerequisites
 
