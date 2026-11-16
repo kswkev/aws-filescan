@@ -178,7 +178,19 @@ IAM **is enforced** by the emulator, including inside functions, so these polici
 
 ---
 
-## Phase 3 – `filegateway` lambda (Python)
+## Phase 3 – `filegateway` lambda (Python) ✅
+
+Completed 2026-11-16.
+- **Tests:** 49 pytest/moto tests pass (`mvn test -pl lambda/filegateway`), and the handler also compiles on Python 3.14.
+- **Live check:** the real `filegateway.zip` was deployed temporarily to the emulator with the Terraform `filegateway-role`, then removed. Every route behaved correctly:
+  - an upload through the pre-signed URL, sent with the proxy's `Host` header, stored the file;
+  - a mismatched `Content-Type` was rejected (403);
+  - status, the index-based listing and downloads all worked.
+- **Implementation notes:**
+  - The S3 client sets `signature_version="s3v4"` explicitly. Without it, botocore pre-signs with legacy SigV2 in us-east-1; the tests caught this.
+  - It also uses path-style addressing, so `PUBLIC_S3_BASE` only has to swap the scheme and host.
+  - Pre-signed URLs are ~2 KB, because they carry the role's session token. The browser must send exactly the `contentType` it requested.
+  - Responses: `201` for uploads; `400`/`404`/`405` with `{"message"}`; `500` without details (logged).
 
 Single handler. It routes on the Function URL event's `requestContext.http.method` and `rawPath`, and returns `{statusCode, headers, body}` with JSON bodies.
 

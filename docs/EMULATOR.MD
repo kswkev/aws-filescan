@@ -56,6 +56,9 @@ Functions do **not** run in a normal Lambda container:
 | `generate_presigned_url` | ✅ Works locally (no network), but URLs are always signed for host `s3.us-east-1.amazonaws.com`, path-style; `endpoint_url` is ignored |
 | DynamoDB | ✅ `put_item`, `get_item`, `scan`, `query`, and `resource('dynamodb').Table(...).put_item` |
 | SQS | Calls are bound (`list_queues` succeeded) |
+| `botocore.config.Config` | ✅ Accepted (`signature_version="s3v4"`, `s3.addressing_style="path"`) |
+| DynamoDB `query` on a GSI | ✅ `IndexName`, `ExpressionAttributeNames`, `ScanIndexForward=False` and `Limit` all work |
+| Pre-signed URLs from a function | Signed with the execution role's temporary credentials, so they include `X-Amz-Security-Token` (~2 KB URLs). A signed `Content-Type` is enforced: a mismatched header gets 403 |
 
 ### Using function-generated pre-signed URLs from the browser
 
