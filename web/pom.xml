@@ -15,8 +15,41 @@
     <name>AWS FileScan :: Web</name>
     <description>Static web UI (copied to target/dist) and the local dev proxy.</description>
 
+    <!--
+        test    -> pytest for the dev proxy (src/test/python), skipped with -DskipTests
+        package -> src/main/web copied to target/dist
+        Run the UI:  python web/src/main/python/devproxy.py   (or scripts/start-web.ps1)
+    -->
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>pytest</id>
+                        <phase>test</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <skip>${skipTests}</skip>
+                            <executable>${venv.python}</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <environmentVariables>
+                                <PYTHONPATH>${project.basedir}/src/main/python</PYTHONPATH>
+                                <PYTHONDONTWRITEBYTECODE>1</PYTHONDONTWRITEBYTECODE>
+                            </environmentVariables>
+                            <arguments>
+                                <argument>-m</argument>
+                                <argument>pytest</argument>
+                                <argument>src/test/python</argument>
+                                <argument>-q</argument>
+                                <argument>-p</argument>
+                                <argument>no:cacheprovider</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>

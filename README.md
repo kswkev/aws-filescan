@@ -14,9 +14,11 @@ A web UI for uploading files to S3. A Lambda function then simulates a virus sca
 |---|---|
 | `lambda/filegateway` | Python Lambda: pre-signed upload URLs, scan status, file listings |
 | `lambda/filescan` | Python Lambda: SQS consumer that "scans" and moves uploaded files |
-| `web` | Static UI (`src/main/web`) and, from Phase 6, the local dev proxy |
+| `web` | Static UI (`src/main/web`) and the local dev proxy (`src/main/python/devproxy.py`) |
 | `terraform` | All AWS resources, targeting the emulator |
 | `scripts/emulator-env.ps1` | Connects a PowerShell session to the emulator |
+| `scripts/deploy.ps1` | Test, build and deploy everything to the emulator |
+| `scripts/start-web.ps1` | Build the UI and start the dev proxy on port 8080 |
 
 ## Prerequisites
 
@@ -78,6 +80,23 @@ $url = terraform -chdir=terraform output -raw filegateway_url
 curl.exe --cacert .emulator\ca.pem -X POST -H "Content-Type: application/json" `
   --data '{\"fileName\":\"a.txt\",\"contentType\":\"text/plain\"}' "${url}uploads"
 ```
+
+## Run the web UI
+
+```powershell
+.\scripts\deploy.ps1        # once, or after code changes
+.\scripts\start-web.ps1     # builds the UI and starts the dev proxy; Ctrl+C to stop
+```
+
+Open **http://127.0.0.1:8080**, then choose or drop files and click **Upload**. Each file shows its progress and scan result, and the **Clean** and **Quarantined** lists below update automatically.
+
+The page is served by `web/src/main/python/devproxy.py`, which:
+- forwards `/api/*` to the filegateway Function URL;
+- forwards `/s3/*` to S3 in the emulator.
+
+The proxy is needed because pre-signed URLs from the emulator are signed for `s3.us-east-1.amazonaws.com` (see `docs/EMULATOR.MD`). It also means the browser never needs CORS or the emulator's certificate. Downloads are always served as attachments, so uploaded HTML can't run in the page.
+
+Proxy options: `--port`, `--api-url`, `--emulator`, `--ca`, `--dist` (run it with `--help`).
 
 ## Tear down
 

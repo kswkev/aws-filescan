@@ -4,10 +4,62 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AWS FileScan</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
 </head>
 <body>
-    <!-- Placeholder created in Phase 1. The upload page and file lists are built in Phase 6. -->
+<header class="site-header">
     <h1>AWS FileScan</h1>
-    <p>Coming soon.</p>
+    <p class="tagline">Upload a file. It is scanned and sorted into <strong>clean</strong> or <strong>quarantine</strong>.</p>
+</header>
+
+<main>
+    <section class="card" aria-labelledby="upload-heading">
+        <h2 id="upload-heading">Upload</h2>
+        <form id="upload-form">
+            <label id="drop-zone" class="drop-zone" for="file-input">
+                <span class="drop-zone-title">Choose files or drop them here</span>
+                <span class="drop-zone-hint">Each file is uploaded straight to S3 with a short-lived pre-signed URL.</span>
+                <input id="file-input" type="file" multiple>
+            </label>
+            <div class="form-actions">
+                <span id="selection" class="muted">No files selected</span>
+                <button id="upload-button" type="submit" disabled>Upload</button>
+            </div>
+        </form>
+
+        <h3 class="subheading">Your uploads</h3>
+        <p id="uploads-empty" class="muted">Nothing uploaded in this session yet.</p>
+        <ul id="uploads" class="uploads" aria-live="polite"></ul>
+    </section>
+
+    <section class="card" aria-labelledby="results-heading">
+        <div class="section-head">
+            <h2 id="results-heading">Scanned files</h2>
+            <button id="refresh-button" type="button" class="secondary">Refresh</button>
+        </div>
+        <p id="lists-error" class="error" hidden></p>
+        <div class="lists">
+            <div class="list" data-status="CLEAN">
+                <h3><span class="badge clean">Clean</span> <span class="count" data-count="CLEAN">0</span></h3>
+                <table>
+                    <thead><tr><th scope="col">File</th><th scope="col">Scanned</th><th scope="col" class="num">Size</th><th scope="col"><span class="sr-only">Link</span></th></tr></thead>
+                    <tbody data-list="CLEAN"></tbody>
+                </table>
+            </div>
+            <div class="list" data-status="QUARANTINE">
+                <h3><span class="badge quarantine">Quarantined</span> <span class="count" data-count="QUARANTINE">0</span></h3>
+                <table>
+                    <thead><tr><th scope="col">File</th><th scope="col">Scanned</th><th scope="col" class="num">Size</th><th scope="col"><span class="sr-only">Link</span></th></tr></thead>
+                    <tbody data-list="QUARANTINE"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer muted">
+    Local demo running against the AWS emulator. Download links are pre-signed and fetched fresh on each click.
+</footer>
 </body>
 </html>

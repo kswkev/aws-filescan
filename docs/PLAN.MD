@@ -309,7 +309,32 @@ Implementation notes:
 
 ---
 
-## Phase 6 – Web UI
+## Phase 6 – Web UI ✅ (browser check pending)
+
+Completed 2026-11-16:
+- `web/src/main/web/`: `index.html`, `app.js` (plain JS, no build step) and `styles.css`.
+- `web/src/main/python/devproxy.py`: the dev proxy, standard library only.
+- `scripts/start-web.ps1`: builds the UI and starts the proxy on `http://127.0.0.1:8080`.
+
+**UI behaviour:**
+- Multi-file upload (picker or drag-and-drop) with per-file progress.
+- Each file moves through Requesting → Uploading x% → Scanning… → Clean / Quarantined, polling every 2 s for up to 60 s.
+- Clean and quarantined lists (name, scan time, size), refreshed after each completed scan or with the Refresh button.
+- Download links are fetched fresh on click, because pre-signed URLs expire after 5 min.
+- File names are only ever inserted with `textContent`.
+
+**Proxy behaviour:**
+- `/api/*` → Function URL, read from `terraform output`.
+- `/s3/*` → emulator with `Host: s3.us-east-1.amazonaws.com`; only GET, HEAD and PUT are allowed, and the path and query are passed byte-for-byte.
+- Forwards only an allow-list of request headers; listens on 127.0.0.1 only; verifies TLS against `.emulator/ca.pem`.
+- Hides pre-signed query strings in its logs.
+- **Security:** UI pages get a strict CSP. `/s3` downloads are forced to `Content-Disposition: attachment` with `nosniff` and `CSP: sandbox`. Uploads share the UI's origin, so this stops an uploaded HTML file from running script in the UI.
+
+**Verified:**
+- 19 pytest tests for the proxy, run by `mvn test` alongside the 74 lambda tests.
+- `node --check app.js` passes.
+- A live run through the real proxy against the deployed stack passed: assets, upload of a `.txt` and an `.html` file via `/s3`, polling, both lists, downloads with byte-identical content, a sandboxed HTML download, and `DELETE /s3` blocked (405).
+- **Not yet verified:** a manual check in a real browser (the JavaScript's DOM behaviour). Run `.\scripts\start-web.ps1` and open http://127.0.0.1:8080.
 
 ### 6.1 Upload page
 - File picker and upload button.
