@@ -58,6 +58,7 @@ Functions do **not** run in a normal Lambda container:
 | SQS | Calls are bound (`list_queues` succeeded) |
 | `botocore.config.Config` | ✅ Accepted (`signature_version="s3v4"`, `s3.addressing_style="path"`) |
 | DynamoDB `query` on a GSI | ✅ `IndexName`, `ExpressionAttributeNames`, `ScanIndexForward=False` and `Limit` all work |
+| Missing S3 key from a function | Raises `botocore.exceptions.ClientError` subclasses with a real-looking `response`. As in real AWS, `HeadObject`/`GetObject` on a missing key return **403 unless the role has `s3:ListBucket`** on the bucket; with it, they return 404. `CopyObject` from a missing key raises `NoSuchKey` (404) |
 | Pre-signed URLs from a function | Signed with the execution role's temporary credentials, so they include `X-Amz-Security-Token` (~2 KB URLs). A signed `Content-Type` is enforced: a mismatched header gets 403 |
 
 ### Using function-generated pre-signed URLs from the browser
@@ -73,6 +74,11 @@ A browser can't set the `Host` header. So the web UI is served by a **small loca
 - forwards `/api/*` to the filegateway Function URL.
 
 The proxy trusts the emulator CA, so the browser only ever talks to `http://localhost`. That also removes the need for CORS and for browser CA trust.
+
+## Tooling tips (Windows PowerShell 5.1)
+- **Non-ASCII output:** the AWS CLI prints in the system code page, so values like `é` come back as `U+FFFD`. Set `$env:PYTHONUTF8 = '1'` (and `[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)`) before parsing CLI output.
+- **Payload files:** `Set-Content -Encoding utf8` writes a BOM, and the emulator rejects JSON payload files that start with one. Use `[IO.File]::WriteAllText(path, text, [Text.UTF8Encoding]::new($false))` or `-Encoding ascii`.
+- **Scripts:** a script containing non-ASCII literals must be saved as UTF-8 *with* a BOM, or PowerShell 5.1 reads it as Windows-1252.
 
 ## Impact on the brief
 - Lambdas are written in **Python** rather than Java/Micronaut, as agreed with the user on 2026-11-16. Maven remains the build orchestrator, and JDK 17 is used only to run Maven.

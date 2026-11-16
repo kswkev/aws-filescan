@@ -167,6 +167,7 @@ IAM **is enforced** by the emulator, including inside functions, so these polici
 - **`filescan-role`**:
   - `sqs:ReceiveMessage`, `sqs:DeleteMessage` and `sqs:GetQueueAttributes` on `upload-events`;
   - `s3:GetObject` and `s3:DeleteObject` on `upload/*`;
+  - `s3:ListBucket` on `upload`, so that a missing key returns 404 rather than 403 (added in Phase 4);
   - `s3:PutObject` on `clean/*` and `quarantine/*`;
   - `dynamodb:PutItem`;
   - CloudWatch Logs.
@@ -221,7 +222,20 @@ Single handler. It routes on the Function URL event's `requestContext.http.metho
 
 ---
 
-## Phase 4 – `filescan` lambda (Python)
+## Phase 4 – `filescan` lambda (Python) ✅
+
+Completed 2026-11-16.
+- **Tests:** 25 pytest/moto tests pass (`mvn test -pl lambda/filescan`), and the handler also compiles on Python 3.14.
+- **Live check:** the real `filescan.zip` was deployed temporarily with the Terraform `filescan-role` and a temporary SQS event source mapping, then removed. Results:
+  - six CLI uploads, including names with spaces and `résumé.pdf`, were each scanned within seconds and moved to exactly their recorded bucket;
+  - content type was preserved;
+  - `TestEvent`, a missing source and a duplicate delivery were all no-ops;
+  - a malformed message was reported in `batchItemFailures`.
+- **Implementation notes:**
+  - Retry-safe ordering: look up the record first and reuse its decision if one exists. Otherwise decide, write the record, then copy and delete. A retry can therefore never place a file in both buckets. The cost is that, for a few milliseconds, the record exists before the file reaches its bucket.
+  - `scannedAt` uses millisecond-precision UTC ISO-8601 (`...T16:42:24.274Z`), which sorts correctly as a string for `status-index`.
+  - **IAM fix (`terraform/iam.tf`):** `filescan-role` now also has `s3:ListBucket` on `upload`. Without it, S3 returns **403 instead of 404** for a missing key, so a duplicate delivery looked like an access error and was retried until it reached the DLQ. Moto doesn't enforce IAM, so only the live check caught this.
+  - A key without a `/` (e.g. uploaded by hand) uses the whole key as both `fileId` and `fileName`.
 
 ### 4.1 SQS event handler
 - `handler(event, context)` loops over `event["Records"]`, `json.loads` each `body`, and reads each S3 record's `bucket.name` and `object.key`. Keys must be URL-decoded with `urllib.parse.unquote_plus`.

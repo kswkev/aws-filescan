@@ -84,6 +84,14 @@ data "aws_iam_policy_document" "filescan" {
     resources = ["${aws_s3_bucket.upload.arn}/*"]
   }
 
+  # Without ListBucket, S3 answers HeadObject on a missing key with 403 instead of 404,
+  # so filescan could not tell "already moved" (a duplicate delivery) from "access denied".
+  statement {
+    sid       = "DetectMissingUploads"
+    actions   = ["s3:ListBucket"]
+    resources = [aws_s3_bucket.upload.arn]
+  }
+
   statement {
     sid     = "PlaceScannedFile"
     actions = ["s3:PutObject"]
