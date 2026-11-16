@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.filescan</groupId>
+        <artifactId>aws-filescan</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>lambda</artifactId>
+    <packaging>pom</packaging>
+    <name>AWS FileScan :: Lambda</name>
+    <description>Python Lambda functions. Each submodule is tested with pytest and packaged as a deployment zip.</description>
+
+    <modules>
+        <module>filegateway</module>
+        <module>filescan</module>
+    </modules>
+
+    <!--
+        Shared build for every function submodule. A submodule only has to set
+        <lambda.package> (the Python package name under src/main/python).
+
+        test    -> pytest src/test/python (PYTHONPATH=src/main/python), skipped with -DskipTests
+        package -> target/${lambda.package}.zip containing only the project's own .py files
+    -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>pytest</id>
+                            <phase>test</phase>
+                            <goals><goal>exec</goal></goals>
+                            <configuration>
+                                <skip>${skipTests}</skip>
+                                <executable>${venv.python}</executable>
+                                <workingDirectory>${project.basedir}</workingDirectory>
+                                <environmentVariables>
+                                    <PYTHONPATH>${project.basedir}/src/main/python</PYTHONPATH>
+                                    <PYTHONDONTWRITEBYTECODE>1</PYTHONDONTWRITEBYTECODE>
+                                </environmentVariables>
+                                <arguments>
+                                    <argument>-m</argument>
+                                    <argument>pytest</argument>
+                                    <argument>src/test/python</argument>
+                                    <argument>-q</argument>
+                                    <argument>-p</argument>
+                                    <argument>no:cacheprovider</argument>
+                                </arguments>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>lambda-zip</id>
+                            <phase>package</phase>
+                            <goals><goal>single</goal></goals>
+                            <configuration>
+                                <finalName>${lambda.package}</finalName>
+                                <appendAssemblyId>false</appendAssemblyId>
+                                <attach>false</attach>
+                                <descriptors>
+                                    <descriptor>${repo.root}/lambda/src/assembly/lambda-zip.xml</descriptor>
+                                </descriptors>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

@@ -61,11 +61,20 @@ Derived from [BRIEF.MD](BRIEF.MD). Each step is a small piece of work that can b
   - S3, SQS, DynamoDB, IAM (enforced), Logs, Python Lambda, S3→SQS notifications, SQS→Lambda mappings, Function URLs and API Gateway v2 all work.
   - Java runtimes do not work.
   - Pre-signed URLs need the proxy described in decision 6.
-- The emulator already contains the buckets `clean`, `quarenteen` and `upload`. See step 2.2.
+- The emulator contained the buckets `clean`, `quarenteen` and `upload`. They were empty and have been deleted (see step 2.2).
 
 ---
 
-## Phase 1 – Project skeleton
+## Phase 1 – Project skeleton ✅
+
+Completed 2026-11-16:
+- `mvn package` runs pytest and builds both function zips and `web/target/dist`.
+- Builds also work from inside a single module, because `.mvn/` anchors the repo root.
+- `-DskipTests` skips pytest.
+- `terraform init`, `validate` and `fmt -check` pass, with the AWS provider at v6.73.0.
+- `terraform plan` already reaches the emulator with no auth or TLS errors.
+- The test virtualenv uses Python 3.12.1, with pytest 9.2, boto3 1.44 and moto 5.2.
+- The lambdas and web page are placeholders until Phases 3, 4 and 6.
 
 ### 1.1 Root (parent) POM
 - `pom.xml` with `<packaging>pom</packaging>`, groupId `com.filescan`, and modules `lambda`, `web`, `terraform`.
@@ -114,7 +123,7 @@ Derived from [BRIEF.MD](BRIEF.MD). Each step is a small piece of work that can b
 - **Done when:** `terraform plan` runs with no auth or TLS errors.
 
 ### 2.2 S3 buckets
-- **Decide first** what to do with the existing `upload`, `clean` and `quarenteen` buckets: either delete them, or `terraform import` `upload`/`clean` and remove the misspelled `quarenteen`.
+- The pre-existing `upload`, `clean` and `quarenteen` buckets were empty and were deleted on 2026-11-16, so Terraform creates all buckets from scratch.
 - Manage `upload`, `clean` and `quarantine` in Terraform. No CORS rules are needed, because all browser traffic goes through the same-origin proxy.
 - **Done when:** `terraform apply` leaves exactly those three buckets.
 

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.filescan</groupId>
+    <artifactId>aws-filescan</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>AWS FileScan</name>
+    <description>Upload files to S3, simulate a virus scan, sort into clean/quarantine buckets.</description>
+
+    <!-- Order matters: lambda zips must be built before terraform deploys them. -->
+    <modules>
+        <module>lambda</module>
+        <module>web</module>
+        <module>terraform</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Repo root; anchored by the .mvn/ directory so it is correct from any module. -->
+        <repo.root>${maven.multiModuleProjectDirectory}</repo.root>
+        <!-- Python interpreter from the project virtualenv (see requirements-dev.txt). OS-specific path set in profiles below. -->
+        <venv.python>${repo.root}/.venv/bin/python</venv.python>
+        <terraform.executable>terraform</terraform.executable>
+
+        <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
+        <exec-maven-plugin.version>3.5.0</exec-maven-plugin.version>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
+    </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${maven-assembly-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>${exec-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${maven-resources-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>windows</id>
+            <activation>
+                <os><family>windows</family></os>
+            </activation>
+            <properties>
+                <venv.python>${repo.root}/.venv/Scripts/python.exe</venv.python>
+            </properties>
+        </profile>
+    </profiles>
+</project>

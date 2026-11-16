@@ -14,7 +14,7 @@ Results of PLAN.MD step 0.3, probed on 2026-11-16 against the `aws-emulator` con
 | Telemetry | On by default; disable with `EMULATOR_TELEMETRY=off` or `-t off` |
 
 ### Pre-existing resources
-The emulator already contained three buckets, all created 2026-11-16 13:24 and not by this project's code: `clean`, `quarenteen` (sic) and `upload`. Decide whether Terraform should import them or whether they should be removed first (PLAN.MD step 2.2).
+The emulator already contained three buckets, all created 2026-11-16 13:24 and not by this project's code: `clean`, `quarenteen` (sic) and `upload`. They were empty, with no notifications, and were deleted on 2026-11-16 at the user's request.
 
 ## Service support (control plane, called from the host)
 

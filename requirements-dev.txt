@@ -1,0 +1,6 @@
+# Host-side development and test dependencies ONLY.
+# Never bundle these into a Lambda zip: the emulator supplies its own boto3
+# stand-in and functions have no network access (see docs/EMULATOR.MD).
+pytest>=8.3
+boto3>=1.35
+moto[dynamodb,s3,sqs]>=5.0
